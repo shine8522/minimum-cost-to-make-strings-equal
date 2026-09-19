@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minimum Delete Cost to Make Strings Identical — Visual Lesson</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0d14;
+  --surface:#121722;
+  --surface2:#1a2131;
+  --surface3:#212a3d;
+  --border:#2a3348;
+  --text:#e9ecf5;
+  --muted:#8892ac;
+  --muted2:#5c6484;
+  --keep:#4ade80;
+  --keep-bg:rgba(74,222,128,.12);
+  --del:#fb7185;
+  --del-bg:rgba(251,113,133,.12);
+  --order:#fbbf24;
+  --order-bg:rgba(251,191,36,.12);
+  --lcs:#a78bfa;
+  --lcs-bg:rgba(167,139,250,.14);
+  --accent:#38bdf8;
+  --radius:14px;
+  --font-head:'Space Grotesk',sans-serif;
+  --font-body:'Inter',sans-serif;
+  --font-code:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:var(--font-body);line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--lcs);color:#0a0d14;}
+.wrap{max-width:860px;margin:0 auto;padding:0 20px;}
+img,svg{max-width:100%;}
+
+/* ---------- top progress ---------- */
+#progress-bar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--lcs));z-index:200;width:0%;transition:width .1s linear;}
+nav.dots{position:fixed;right:14px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:8px;z-index:150;}
+nav.dots a{width:8px;height:8px;border-radius:50%;background:var(--border);display:block;transition:.25s;}
+nav.dots a.active{background:var(--lcs);transform:scale(1.5);}
+@media (max-width:780px){nav.dots{display:none;}}
+
+/* ---------- hero ---------- */
+header.hero{padding:110px 0 70px;text-align:left;position:relative;overflow:hidden;}
+header.hero::before{content:"";position:absolute;top:-120px;right:-120px;width:360px;height:360px;background:radial-gradient(circle,rgba(56,189,248,.18),transparent 70%);}
+.eyebrow{font-family:var(--font-code);font-size:13px;color:var(--muted);margin-bottom:14px;}
+h1{font-family:var(--font-head);font-size:clamp(30px,5vw,50px);line-height:1.12;margin:0 0 18px;font-weight:700;}
+h1 .hl{color:var(--lcs);}
+.sub{color:var(--muted);font-size:17px;max-width:600px;}
+.hero-example{margin-top:34px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;}
+.pair-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;font-family:var(--font-code);font-size:15px;}
+.pair-card b{color:var(--accent);}
+
+section{padding:64px 0;border-top:1px solid var(--border);}
+.tag{display:inline-block;font-family:var(--font-code);font-size:12px;letter-spacing:.02em;color:var(--bg);background:var(--lcs);padding:4px 10px;border-radius:100px;margin-bottom:16px;}
+.tag.amber{background:var(--order);}
+.tag.green{background:var(--keep);}
+.tag.red{background:var(--del);}
+h2{font-family:var(--font-head);font-size:clamp(22px,3.4vw,30px);margin:0 0 10px;font-weight:600;}
+p.lead{color:var(--muted);font-size:16px;max-width:640px;}
+.hinglish{font-family:var(--font-body);font-style:italic;color:var(--text);}
+
+/* ---------- char boxes ---------- */
+.strip{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:18px 0;}
+.strip .label{font-family:var(--font-code);color:var(--muted);font-size:13px;width:70px;flex-shrink:0;}
+.chbox{
+  width:44px;height:44px;border-radius:10px;background:var(--surface2);
+  border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-code);font-size:19px;font-weight:600;color:var(--text);
+  transition:.35s;position:relative;flex-shrink:0;
+}
+.chbox.idx::after{content:attr(data-i);position:absolute;bottom:-18px;font-size:10px;color:var(--muted2);font-family:var(--font-code);}
+.chbox.keep{border-color:var(--keep);background:var(--keep-bg);color:var(--keep);}
+.chbox.del{border-color:var(--del);background:var(--del-bg);color:var(--del);text-decoration:line-through;opacity:.55;}
+.chbox.match{border-color:var(--keep);background:var(--keep-bg);color:var(--keep);transform:scale(1.12);}
+.chbox.mismatch{border-color:var(--del);background:var(--del-bg);color:var(--del);}
+.chbox.ptr{box-shadow:0 0 0 3px var(--order-bg);border-color:var(--order);}
+.chbox.lcs{border-color:var(--lcs);background:var(--lcs-bg);color:var(--lcs);}
+.chbox.fade{opacity:.3;}
+
+/* ---------- widget card ---------- */
+.widget{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin:22px 0;}
+.widget .caption{font-family:var(--font-code);font-size:13px;color:var(--muted);min-height:38px;margin-top:14px;}
+.widget .caption b{color:var(--text);}
+.controls{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;}
+.ctrl-btn{
+  font-family:var(--font-code);font-size:13px;background:var(--surface2);color:var(--text);
+  border:1px solid var(--border);border-radius:8px;padding:8px 14px;cursor:pointer;transition:.2s;
+}
+.ctrl-btn:hover{border-color:var(--accent);color:var(--accent);}
+.ctrl-btn:active{transform:scale(.96);}
+.ctrl-btn.primary{background:var(--lcs);color:var(--bg);border-color:var(--lcs);font-weight:600;}
+.stepnum{font-family:var(--font-code);font-size:12px;color:var(--muted2);align-self:center;margin-left:auto;}
+
+/* ---------- legend ---------- */
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin:16px 0 28px;font-family:var(--font-code);font-size:12px;color:var(--muted);}
+.legend span{display:inline-flex;align-items:center;gap:6px;}
+.legend i{width:10px;height:10px;border-radius:3px;display:inline-block;}
+.legend .lk{background:var(--keep);} .legend .ld{background:var(--del);} .legend .lo{background:var(--order);} .legend .ll{background:var(--lcs);}
+
+/* freq table */
+.freqtable{display:flex;gap:8px;margin:14px 0;flex-wrap:wrap;}
+.freqcell{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-family:var(--font-code);font-size:14px;display:flex;gap:8px;align-items:center;transition:.3s;}
+.freqcell .n{color:var(--accent);font-weight:700;}
+.freqcell.used{opacity:.35;text-decoration:line-through;}
+.freqcell.dead{border-color:var(--del);}
+
+/* order-break */
+.arrowbox{position:relative;margin:26px 0 40px;}
+.arrowline{position:absolute;stroke:var(--order);fill:none;stroke-width:2;}
+.orderdiag{display:flex;justify-content:space-between;max-width:340px;position:relative;}
+
+/* question banner */
+.qbanner{background:linear-gradient(135deg,var(--surface2),var(--surface3));border:1px solid var(--border);border-radius:var(--radius);padding:34px 28px;text-align:center;position:relative;overflow:hidden;}
+.qbanner::before{content:"?";position:absolute;font-family:var(--font-head);font-size:220px;color:rgba(255,255,255,.03);top:-60px;right:-10px;}
+.qbanner p{font-family:var(--font-head);font-size:clamp(19px,3vw,25px);color:var(--text);margin:0;position:relative;z-index:1;}
+.qbanner small{display:block;margin-top:10px;color:var(--muted);font-family:var(--font-body);font-size:14px;position:relative;z-index:1;}
+
+/* definition cards */
+.defgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:20px;}
+@media (max-width:700px){.defgrid{grid-template-columns:1fr;}}
+.defcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;}
+.defcard h3{font-family:var(--font-head);font-size:16px;margin:0 0 8px;color:var(--lcs);}
+.defcard p{color:var(--muted);font-size:14px;margin:0;}
+.defcard .ex{margin-top:12px;font-family:var(--font-code);font-size:13px;}
+
+/* formula */
+.formula-box{background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--lcs);border-radius:10px;padding:16px 18px;font-family:var(--font-code);font-size:15px;margin:12px 0;overflow-x:auto;white-space:nowrap;}
+.calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px;}
+@media (max-width:600px){.calc-grid{grid-template-columns:1fr;}}
+.calc-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;}
+.calc-card h4{margin:0 0 10px;font-family:var(--font-code);font-size:13px;color:var(--muted);}
+.calc-row{display:flex;justify-content:space-between;font-family:var(--font-code);font-size:14px;padding:4px 0;border-bottom:1px dashed var(--border);}
+.calc-row:last-child{border:none;font-weight:700;color:var(--lcs);}
+.total-cost{margin-top:16px;text-align:center;background:var(--lcs-bg);border:1px solid var(--lcs);border-radius:12px;padding:18px;font-family:var(--font-head);font-size:22px;color:var(--lcs);}
+
+/* code block */
+.codewrap{background:#0d1017;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin:20px 0;}
+.codehead{display:flex;gap:6px;padding:12px 16px;border-bottom:1px solid var(--border);}
+.codehead i{width:10px;height:10px;border-radius:50%;background:var(--border);}
+.codebody{overflow-x:auto;padding:16px 0;}
+.codeline{
+  font-family:var(--font-code);font-size:13.5px;white-space:pre;padding:3px 20px;display:block;color:#c7cee3;
+  cursor:pointer;border-left:3px solid transparent;transition:.2s;
+}
+.codeline:hover{background:var(--surface2);}
+.codeline.open{background:var(--surface2);border-left-color:var(--accent);}
+.codeline .ln{color:var(--muted2);display:inline-block;width:22px;user-select:none;}
+.tok-kw{color:#c792ea;} .tok-type{color:#82aaff;} .tok-str{color:#c3e88d;} .tok-cm{color:var(--muted2);} .tok-fn{color:#ffcb6b;}
+.explain-panel{
+  max-height:0;overflow:hidden;transition:max-height .3s ease;background:var(--surface3);
+}
+.explain-panel.show{max-height:220px;}
+.explain-inner{padding:14px 24px;font-family:var(--font-body);font-size:14px;color:var(--text);border-left:3px solid var(--accent);margin:0 20px;}
+.explain-inner b{color:var(--accent);}
+
+/* dry run widget */
+.dryrun-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:18px;}
+@media (max-width:760px){.dryrun-grid{grid-template-columns:1fr;}}
+.panel-title{font-family:var(--font-code);font-size:12px;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em;}
+.stack-scroll{max-height:340px;overflow-y:auto;background:var(--surface2);border-radius:10px;padding:10px;}
+.stack-row{
+  font-family:var(--font-code);font-size:12.5px;padding:6px 8px;border-left:2px solid var(--border);
+  color:var(--muted);margin:2px 0;border-radius:4px;opacity:.5;
+}
+.stack-row.active{opacity:1;background:var(--surface3);border-left-color:var(--order);color:var(--text);font-weight:600;}
+.stack-row.done{opacity:.75;}
+.stack-row .rv{color:var(--lcs);font-weight:700;}
+.stack-row .memo-flag{color:var(--order);}
+
+.dp-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;font-family:var(--font-code);font-size:12px;}
+.dp-cell{background:var(--surface2);border:1px solid var(--border);border-radius:6px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--muted2);transition:.3s;}
+.dp-cell.head{background:transparent;border:none;color:var(--muted2);}
+.dp-cell.base{color:var(--muted);}
+.dp-cell.filled{color:var(--text);border-color:var(--lcs);}
+.dp-cell.hot{background:var(--order-bg);border-color:var(--order);color:var(--order);font-weight:700;transform:scale(1.08);}
+
+.ptr-readout{display:flex;gap:20px;margin-top:14px;font-family:var(--font-code);font-size:13px;flex-wrap:wrap;}
+.ptr-readout div{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;}
+.ptr-readout b{color:var(--order);}
+
+/* mismatch choice */
+.choice-wrap{display:flex;gap:16px;flex-wrap:wrap;margin-top:20px;}
+.choice-card{flex:1;min-width:220px;background:var(--surface2);border:2px solid var(--border);border-radius:12px;padding:16px;text-align:center;transition:.3s;}
+.choice-card.win{border-color:var(--keep);background:var(--keep-bg);}
+.choice-card.lose{border-color:var(--del);opacity:.55;}
+.choice-card .val{font-family:var(--font-head);font-size:30px;margin:8px 0;}
+
+/* summary flow */
+.flow{display:flex;flex-direction:column;gap:0;margin-top:20px;}
+.flow-step{display:flex;gap:14px;align-items:flex-start;padding:14px 0;}
+.flow-num{width:30px;height:30px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--font-code);font-size:13px;flex-shrink:0;color:var(--muted);}
+.flow-step.on .flow-num{background:var(--lcs);color:var(--bg);border-color:var(--lcs);}
+.flow-line{width:1px;background:var(--border);flex:1;margin-left:15px;min-height:20px;}
+.flow-text b{color:var(--text);}
+.flow-text{color:var(--muted);font-size:14px;padding-top:4px;}
+
+footer{padding:50px 0 90px;text-align:center;color:var(--muted2);font-family:var(--font-code);font-size:12px;}
+.info-btn{background:none;border:1px solid var(--border);color:var(--muted);border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;margin-left:6px;font-family:var(--font-code);}
+.info-pop{display:none;background:var(--surface3);border:1px solid var(--accent);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text);margin-top:8px;}
+.info-pop.show{display:block;}
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+<nav class="dots" id="dotsNav"></nav>
+
+<div class="wrap">
+
+<header class="hero">
+  <div class="eyebrow">// DSA VISUAL LESSON — DYNAMIC PROGRAMMING</div>
+  <h1>Minimum Cost to Delete Characters<br>to Make Two Strings <span class="hl">Identical</span></h1>
+  <p class="sub">We won't hand you a formula. We'll get confused first, break a wrong idea on purpose, and let the right idea — <b>Longest Common Subsequence</b> — reveal itself to you.</p>
+  <div class="hero-example">
+    <div class="pair-card">s1 = <b>"abcd"</b>, cost1 = 10</div>
+    <div class="pair-card">s2 = <b>"acdb"</b>, cost2 = 20</div>
+  </div>
+</header>
+
+<!-- SECTION 1 -->
+<section id="s1">
+  <span class="tag amber">Step 1 · The obvious idea</span>
+  <h2>Let's just count characters</h2>
+  <p class="lead">Take <b>s1 = "sea"</b> and <b>s2 = "eat"</b>. The natural instinct: build a frequency map of s1, then walk through s2 and see what's common.</p>
+
+  <div class="widget">
+    <div class="legend">
+      <span><i class="lk"></i>keep (common)</span>
+      <span><i class="ld"></i>delete (leftover)</span>
+      <span><i class="lo"></i>current pointer</span>
+    </div>
+    <div class="strip" id="f-s1row"><span class="label">s1 "sea"</span></div>
+    <div class="freqtable" id="f-freq"></div>
+    <div class="strip" id="f-s2row"><span class="label">s2 "eat"</span></div>
+    <div class="caption" id="f-caption">Press <b>Play</b> to build the frequency map and traverse s2.</div>
+    <div class="controls">
+      <button class="ctrl-btn" data-act="restart" data-w="freq">⟲ Restart</button>
+      <button class="ctrl-btn" data-act="prev" data-w="freq">◀ Prev</button>
+      <button class="ctrl-btn primary" data-act="play" data-w="freq">▶ Play</button>
+      <button class="ctrl-btn" data-act="next" data-w="freq">Next ▶</button>
+      <span class="stepnum" id="f-stepnum">0/0</span>
+    </div>
+  </div>
+  <p class="lead">Result: we keep <b style="color:var(--keep)">e, a</b> in both, delete <b style="color:var(--del)">s</b> from s1 and <b style="color:var(--del)">t</b> from s2. It <i>feels</i> correct here — because for "sea"/"eat" it happens to work. Let's push it a little harder.</p>
+</section>
+
+<!-- SECTION 2 -->
+<section id="s2">
+  <span class="tag red">Step 2 · Breaking the idea</span>
+  <h2>Now try "abcd" vs "acdb"</h2>
+  <p class="lead">Same letters, same counts — <b>a, b, c, d</b> appear exactly once in both. By the frequency logic, everything is "common." Nothing should need deleting.</p>
+
+  <div class="widget">
+    <div class="strip">
+      <span class="label">s1</span>
+      <div class="chbox idx" data-i="0">a</div><div class="chbox idx" data-i="1">b</div><div class="chbox idx" data-i="2">c</div><div class="chbox idx" data-i="3">d</div>
+    </div>
+    <div class="strip" style="margin-top:26px;">
+      <span class="label">s2</span>
+      <div class="chbox idx" data-i="0">a</div><div class="chbox idx" data-i="1">c</div><div class="chbox idx" data-i="2">d</div><div class="chbox idx" data-i="3">b</div>
+    </div>
+    <div class="freqtable" style="margin-top:20px;">
+      <div class="freqcell">a <span class="n">×1</span></div>
+      <div class="freqcell">b <span class="n">×1</span></div>
+      <div class="freqcell">c <span class="n">×1</span></div>
+      <div class="freqcell">d <span class="n">×1</span></div>
+    </div>
+    <div class="caption">Frequency map says: <b>identical.</b> But look again — <b>"abcd" ≠ "acdb"</b>. The letter <b style="color:var(--order)">b</b> sits at position 1 in s1, but at position 3 in s2. Frequency counting is blind to <b style="color:var(--order)">position</b>.</div>
+  </div>
+  <p class="lead" style="margin-top:18px;">The missing ingredient isn't <i>which</i> characters are common — it's whether they appear in the <b style="color:var(--order)">same relative order</b>.</p>
+</section>
+
+<!-- SECTION 3 -->
+<section id="s3">
+  <div class="qbanner">
+    <p>Order preserve karte hue, dono strings mein <span style="color:var(--lcs)">maximum</span> kya rakh sakte hain?</p>
+    <small>(Keeping the relative order intact, what's the most we can retain from both strings?)</small>
+  </div>
+</section>
+
+<!-- SECTION 4 -->
+<section id="s4">
+  <span class="tag">Step 4 · Building the answer by hand</span>
+  <h2>Let's build it ourselves: A → C → D</h2>
+  <p class="lead">We'll walk both strings and greedily try to keep characters — but only if order survives.</p>
+  <div class="widget">
+    <div class="strip" id="g-s1row"><span class="label">s1</span></div>
+    <div class="strip" id="g-s2row" style="margin-top:22px;"><span class="label">s2</span></div>
+    <div class="caption" id="g-caption">Press <b>Play</b> to grow the sequence step by step.</div>
+    <div class="controls">
+      <button class="ctrl-btn" data-act="restart" data-w="grow">⟲ Restart</button>
+      <button class="ctrl-btn" data-act="prev" data-w="grow">◀ Prev</button>
+      <button class="ctrl-btn primary" data-act="play" data-w="grow">▶ Play</button>
+      <button class="ctrl-btn" data-act="next" data-w="grow">Next ▶</button>
+      <span class="stepnum" id="g-stepnum">0/0</span>
+    </div>
+  </div>
+
+  <div class="widget">
+    <div class="panel-title">Why can't B join the sequence?</div>
+    <div class="choice-wrap">
+      <div class="choice-card lose">
+        <div>Keep B (skip C, D)</div>
+        <div class="val" style="color:var(--del)">length 2</div>
+        <div style="font-size:12px;color:var(--muted)">a → b — but now c, d in s2 sit <i>before</i> b, so they can never follow it in order.</div>
+      </div>
+      <div class="choice-card win">
+        <div>Skip B, keep C, D</div>
+        <div class="val" style="color:var(--keep)">length 3</div>
+        <div style="font-size:12px;color:var(--muted)">a → c → d — every step moves forward in <i>both</i> strings.</div>
+      </div>
+    </div>
+    <p class="lead" style="margin-top:16px;">We always take the path that keeps <b>more</b> characters while respecting order. That's the whole idea — you just discovered it yourself.</p>
+  </div>
+</section>
+
+<!-- SECTION 5 -->
+<section id="s5">
+  <span class="tag green">Step 5 · Naming what you found</span>
+  <h2>This idea already has a name: LCS</h2>
+  <p class="lead">What you built — <b style="color:var(--lcs)">A, C, D</b> — is the <b>Longest Common Subsequence</b> of "abcd" and "acdb". Let's unpack the three words.</p>
+  <div class="defgrid">
+    <div class="defcard">
+      <h3>Longest</h3>
+      <p>Among every valid order-preserving sequence both strings share, take the one with the <b>maximum length</b>.</p>
+      <div class="ex">len("ACD") = 3 → the winner</div>
+    </div>
+    <div class="defcard">
+      <h3>Common</h3>
+      <p>The sequence must exist in <b>both</b> strings — not just one.</p>
+      <div class="ex">A, C, D ∈ s1 <b>and</b> ∈ s2</div>
+    </div>
+    <div class="defcard">
+      <h3>Subsequence</h3>
+      <p>Characters don't need to be <b>contiguous</b> — just in the same relative order.</p>
+      <div class="ex">"acd" from "a<span style="opacity:.3">b</span>cd" — skip b, order kept</div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 6 -->
+<section id="s6">
+  <span class="tag amber">Step 6 · From LCS to cost</span>
+  <h2>Delete everything outside the LCS</h2>
+  <p class="lead">Once we know the LCS, the answer is mechanical: anything in a string that is <b>not</b> part of the LCS must be deleted — otherwise the strings won't match.</p>
+  <div class="formula-box">deleted = stringLength − LCSLength</div>
+  <div class="formula-box">totalCost = deleted1 × cost1 + deleted2 × cost2</div>
+
+  <div class="calc-grid">
+    <div class="calc-card">
+      <h4>s1 = "abcd" (len 4), cost1 = 10</h4>
+      <div class="calc-row"><span>LCS length</span><span>3</span></div>
+      <div class="calc-row"><span>deleted1 = 4 − 3</span><span>1</span></div>
+      <div class="calc-row"><span>cost1 contribution = 1 × 10</span><span>10</span></div>
+    </div>
+    <div class="calc-card">
+      <h4>s2 = "acdb" (len 4), cost2 = 20</h4>
+      <div class="calc-row"><span>LCS length</span><span>3</span></div>
+      <div class="calc-row"><span>deleted2 = 4 − 3</span><span>1</span></div>
+      <div class="calc-row"><span>cost2 contribution = 1 × 20</span><span>20</span></div>
+    </div>
+  </div>
+  <div class="total-cost">Total minimum cost = 10 + 20 = 30</div>
+</section>
+
+<!-- SECTION 7 -->
+<section id="s7">
+  <span class="tag">Step 7 · The code</span>
+  <h2>Recursion + Memoization (C++)</h2>
+  <p class="lead">Tap any line below to see exactly what it does and why it exists.</p>
+  <div class="codewrap">
+    <div class="codehead"><i></i><i></i><i></i></div>
+    <div class="codebody" id="codebody"></div>
+  </div>
+</section>
+
+<!-- SECTION 9 (dry run) -->
+<section id="s9">
+  <span class="tag red">Step 9 · Full dry run</span>
+  <h2>Watch the recursion actually happen</h2>
+  <p class="lead">s1 = "abcd", s2 = "acdb". Every call, every match/mismatch, every memo hit, synced with the DP table.</p>
+
+  <div class="widget">
+    <div class="ptr-readout">
+      <div>i = <b id="dr-i">0</b> → s1[i] = <b id="dr-c1">a</b></div>
+      <div>j = <b id="dr-j">0</b> → s2[j] = <b id="dr-c2">a</b></div>
+    </div>
+    <div class="strip" id="dr-s1row" style="margin-top:16px;"><span class="label">s1</span></div>
+    <div class="strip" id="dr-s2row"><span class="label">s2</span></div>
+
+    <div class="dryrun-grid" style="margin-top:22px;">
+      <div>
+        <div class="panel-title">Call stack / recursion tree</div>
+        <div class="stack-scroll" id="dr-stack"></div>
+      </div>
+      <div>
+        <div class="panel-title">DP table dp[i][j]</div>
+        <div class="dp-grid" id="dr-dp"></div>
+      </div>
+    </div>
+
+    <div class="caption" id="dr-caption" style="margin-top:16px;">Press <b>Play</b> to start the dry run.</div>
+    <div class="controls">
+      <button class="ctrl-btn" data-act="restart" data-w="dry">⟲ Restart</button>
+      <button class="ctrl-btn" data-act="prev" data-w="dry">◀ Prev</button>
+      <button class="ctrl-btn primary" data-act="play" data-w="dry">▶ Play</button>
+      <button class="ctrl-btn" data-act="next" data-w="dry">Next ▶</button>
+      <span class="stepnum" id="dry-stepnum">0/0</span>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 10 -->
+<section id="s10">
+  <span class="tag amber">Step 10 · The mismatch decision</span>
+  <h2>Why max() of two branches?</h2>
+  <p class="lead">At lcs(1,1): s1[1]='b', s2[1]='c' — mismatch. We can't take both, so we try dropping one character from <i>either</i> side and keep whichever path survives longer.</p>
+  <div class="choice-wrap">
+    <div class="choice-card win">
+      <div style="font-family:var(--font-code);font-size:13px;color:var(--muted)">lcs(i+1, j)</div>
+      <div>drop s1[i] = 'b'</div>
+      <div class="val" style="color:var(--keep)">→ 2</div>
+    </div>
+    <div class="choice-card lose">
+      <div style="font-family:var(--font-code);font-size:13px;color:var(--muted)">lcs(i, j+1)</div>
+      <div>drop s2[j] = 'c'</div>
+      <div class="val" style="color:var(--del)">→ 1</div>
+    </div>
+  </div>
+  <p class="lead" style="margin-top:16px;">We take <b>max(2, 1) = 2</b> — never both, never neither. This is the single decision repeated at every mismatch in the whole recursion.</p>
+</section>
+
+<!-- SECTION 11 -->
+<section id="s11">
+  <span class="tag green">Step 11 · The full journey</span>
+  <h2>From confusion to code</h2>
+  <div class="flow" id="flowlist">
+    <div class="flow-step"><div class="flow-num">1</div><div class="flow-text"><b>Frequency counting</b> feels natural — and even works for "sea"/"eat".</div></div>
+    <div class="flow-step"><div class="flow-num">2</div><div class="flow-text">It <b>fails</b> on "abcd"/"acdb" — same letters, same counts, different strings. Missing piece: <b style="color:var(--order)">order</b>.</div></div>
+    <div class="flow-step"><div class="flow-num">3</div><div class="flow-text">We ask: what's the <b>maximum</b> we can keep while preserving order?</div></div>
+    <div class="flow-step"><div class="flow-num">4</div><div class="flow-text">That maximum, order-preserving, shared sequence is the <b style="color:var(--lcs)">Longest Common Subsequence</b>.</div></div>
+    <div class="flow-step"><div class="flow-num">5</div><div class="flow-text">Everything <b style="color:var(--del)">outside</b> the LCS must be deleted from each string.</div></div>
+    <div class="flow-step"><div class="flow-num">6</div><div class="flow-text">Cost = deleted characters × their per-character cost, summed for both strings.</div></div>
+    <div class="flow-step"><div class="flow-num">7</div><div class="flow-text">Code it as recursion on (i, j), memoized on repeated (i, j) calls.</div></div>
+  </div>
+</section>
+
+<footer>Built for understanding, not memorizing. — LCS Delete-Cost Lesson</footer>
+</div>
+
+<script>
+// ===================== Utility: generic stepper =====================
+function makeStepper(name, steps, renderFn, stepnumId){
+  const state = { i:-1, timer:null, playing:false };
+  const stepnumEl = document.getElementById(stepnumId);
+  function show(idx){
+    if(idx<0) idx=0;
+    if(idx>steps.length-1) idx=steps.length-1;
+    state.i = idx;
+    renderFn(steps[idx], idx);
+    if(stepnumEl) stepnumEl.textContent = (idx+1)+"/"+steps.length;
+  }
+  function next(){ if(state.i < steps.length-1){ show(state.i+1); } else { pause(); } }
+  function prev(){ if(state.i > 0){ show(state.i-1); } }
+  function restart(){ pause(); show(0); }
+  function play(){
+    if(state.playing) return;
+    state.playing = true;
+    if(state.i >= steps.length-1) show(0);
+    state.timer = setInterval(()=>{
+      if(state.i >= steps.length-1){ pause(); return; }
+      next();
+    }, 1300);
+  }
+  function pause(){
+    state.playing = false;
+    if(state.timer){ clearInterval(state.timer); state.timer=null; }
+  }
+  show(0);
+  return { next, prev, restart, play, pause, state };
+}
+
+document.addEventListener('click', function(e){
+  const btn = e.target.closest('.ctrl-btn');
+  if(!btn) return;
+  const w = btn.dataset.w, act = btn.dataset.act;
+  const ctrl = window.__controllers[w];
+  if(!ctrl) return;
+  if(act==='play'){
+    if(ctrl.state.playing){ ctrl.pause(); btn.textContent='▶ Play'; }
+    else { ctrl.play(); btn.textContent='⏸ Pause'; }
+  } else {
+    ctrl.pause();
+    document.querySelectorAll('.ctrl-btn[data-w="'+w+'"][data-act="play"]').forEach(b=>b.textContent='▶ Play');
+    if(act==='next') ctrl.next();
+    if(act==='prev') ctrl.prev();
+    if(act==='restart') ctrl.restart();
+  }
+});
+window.__controllers = {};
+
+// ===================== SECTION 1: Frequency demo (sea vs eat) =====================
+(function(){
+  const s1 = "sea", s2 = "eat";
+  const s1row = document.getElementById('f-s1row');
+  const s2row = document.getElementById('f-s2row');
+  const freqDiv = document.getElementById('f-freq');
+  const caption = document.getElementById('f-caption');
+
+  s1.split('').forEach((c,i)=>{
+    const b = document.createElement('div'); b.className='chbox'; b.textContent=c; b.id='f-s1-'+i;
+    s1row.appendChild(b);
+  });
+  s2.split('').forEach((c,i)=>{
+    const b = document.createElement('div'); b.className='chbox'; b.textContent=c; b.id='f-s2-'+i;
+    s2row.appendChild(b);
+  });
+
+  const steps = [
+    {cap:'Start: s1 = "sea", s2 = "eat".'},
+    {cap:'Build a frequency map of s1: count each character.', freq:{s:1}},
+    {cap:'Continue building the map.', freq:{s:1,e:1}},
+    {cap:'Frequency map of s1 complete.', freq:{s:1,e:1,a:1}},
+    {cap:'Now traverse s2 left to right. Pointer on <b>e</b>.', ptr2:0, freq:{s:1,e:1,a:1}},
+    {cap:'"e" exists in the map with count 1 → <b style="color:var(--keep)">KEEP</b>. Decrement its count.', ptr2:0, keep2:[0], freq:{s:1,e:0,a:1}, usedFreq:['e']},
+    {cap:'Pointer moves to <b>a</b>.', ptr2:1, keep2:[0], freq:{s:1,e:0,a:1}, usedFreq:['e']},
+    {cap:'"a" exists in the map with count 1 → <b style="color:var(--keep)">KEEP</b>. Decrement its count.', ptr2:1, keep2:[0,1], freq:{s:1,e:0,a:0}, usedFreq:['e','a']},
+    {cap:'Pointer moves to <b>t</b>.', ptr2:2, keep2:[0,1], freq:{s:1,e:0,a:0}, usedFreq:['e','a']},
+    {cap:'"t" is <b style="color:var(--del)">not in the map</b> → DELETE it from s2.', ptr2:2, keep2:[0,1], del2:[2], freq:{s:1,e:0,a:0}, usedFreq:['e','a'], deadFreq:['t']},
+    {cap:'Whatever is left unused in the map (s:1) must be deleted from s1 too.', keep2:[0,1], del2:[2], del1:[0], keep1:[1,2], freq:{s:1,e:0,a:0}, usedFreq:['e','a'], deadFreq:['t']},
+    {cap:'Result: keep "ea" in both, delete "s" from s1 and "t" from s2. <b style="color:var(--order)">Looks correct here</b> — but wait for the next example.', keep2:[0,1], del2:[2], del1:[0], keep1:[1,2], freq:{s:1,e:0,a:0}, usedFreq:['e','a'], deadFreq:['t'], final:true},
+  ];
+
+  function render(step){
+    caption.innerHTML = step.cap;
+    // reset
+    [0,1,2].forEach(i=>{
+      const e1 = document.getElementById('f-s1-'+i), e2 = document.getElementById('f-s2-'+i);
+      if(e1) e1.className='chbox';
+      if(e2) e2.className='chbox';
+    });
+    if(step.keep1) step.keep1.forEach(i=>document.getElementById('f-s1-'+i).classList.add('keep'));
+    if(step.del1) step.del1.forEach(i=>document.getElementById('f-s1-'+i).classList.add('del'));
+    if(step.keep2) step.keep2.forEach(i=>document.getElementById('f-s2-'+i).classList.add('keep'));
+    if(step.del2) step.del2.forEach(i=>document.getElementById('f-s2-'+i).classList.add('del'));
+    if(step.ptr2!==undefined) document.getElementById('f-s2-'+step.ptr2).classList.add('ptr');
+
+    // freq table
+    freqDiv.innerHTML='';
+    if(step.freq){
+      Object.keys(step.freq).forEach(k=>{
+        const cell = document.createElement('div');
+        cell.className='freqcell';
+        if(step.usedFreq && step.usedFreq.includes(k) && step.freq[k]===0) cell.classList.add('used');
+        if(step.deadFreq) { /* no-op, delete handled on s2 side */ }
+        cell.innerHTML = k+' <span class="n">×'+step.freq[k]+'</span>';
+        freqDiv.appendChild(cell);
+      });
+    }
+  }
+  window.__controllers['freq'] = makeStepper('freq', steps, render, 'f-stepnum');
+})();
+
+// ===================== SECTION 4: Greedy growth demo (abcd vs acdb) =====================
+(function(){
+  const s1 = "abcd", s2 = "acdb";
+  const s1row = document.getElementById('g-s1row');
+  const s2row = document.getElementById('g-s2row');
+  const caption = document.getElementById('g-caption');
+  s1.split('').forEach((c,i)=>{ const b=document.createElement('div'); b.className='chbox idx'; b.dataset.i=i; b.textContent=c; b.id='g-s1-'+i; s1row.appendChild(b); });
+  s2.split('').forEach((c,i)=>{ const b=document.createElement('div'); b.className='chbox idx'; b.dataset.i=i; b.textContent=c; b.id='g-s2-'+i; s2row.appendChild(b); });
+
+  const steps = [
+    {cap:'i=0 in s1 → "a". j=0 in s2 → "a". They <b style="color:var(--keep)">match</b>!', p1:0,p2:0, lcs1:[0],lcs2:[0]},
+    {cap:'"a" joins the sequence. Move both pointers forward: i=1, j=1.', p1:1,p2:1, lcs1:[0],lcs2:[0]},
+    {cap:'s1[1]="b", s2[1]="c" → mismatch. Try tentatively including "b" anyway.', p1:1,p2:3, lcs1:[0],lcs2:[0], tent1:[1],tent2:[3]},
+    {cap:'If we take "b" (s2 index 3), then "c" and "d" in s2 sit at index 1,2 — <b style="color:var(--del)">before</b> index 3. They can never be reached afterwards. Dead end.', p1:1,p2:3, lcs1:[0],lcs2:[0], bad1:[1],bad2:[3]},
+    {cap:'Backtrack: skip "b" in s1. Move to i=2 → "c". j stays at 1 → "c". Match!', p1:2,p2:1, lcs1:[0,2],lcs2:[0,1]},
+    {cap:'"c" joins the sequence. Move forward: i=3, j=2.', p1:3,p2:2, lcs1:[0,2],lcs2:[0,1]},
+    {cap:'s1[3]="d", s2[2]="d" → match!', p1:3,p2:2, lcs1:[0,2,3],lcs2:[0,1,2]},
+    {cap:'Final kept sequence: <b style="color:var(--lcs)">A → C → D</b>, length 3. "b" in s1 and "b" in s2 stay unmatched — they get deleted.', lcs1:[0,2,3],lcs2:[0,1,2], del1:[1], del2:[3]},
+  ];
+
+  function render(step){
+    [0,1,2,3].forEach(i=>{
+      document.getElementById('g-s1-'+i).className='chbox idx'; document.getElementById('g-s1-'+i).dataset.i=i;
+      document.getElementById('g-s2-'+i).className='chbox idx'; document.getElementById('g-s2-'+i).dataset.i=i;
+    });
+    caption.innerHTML = step.cap;
+    if(step.lcs1) step.lcs1.forEach(i=>document.getElementById('g-s1-'+i).classList.add('lcs'));
+    if(step.lcs2) step.lcs2.forEach(i=>document.getElementById('g-s2-'+i).classList.add('lcs'));
+    if(step.tent1) step.tent1.forEach(i=>document.getElementById('g-s1-'+i).classList.add('match'));
+    if(step.tent2) step.tent2.forEach(i=>document.getElementById('g-s2-'+i).classList.add('match'));
+    if(step.bad1) step.bad1.forEach(i=>document.getElementById('g-s1-'+i).classList.add('mismatch'));
+    if(step.bad2) step.bad2.forEach(i=>document.getElementById('g-s2-'+i).classList.add('mismatch'));
+    if(step.del1) step.del1.forEach(i=>document.getElementById('g-s1-'+i).classList.add('del'));
+    if(step.del2) step.del2.forEach(i=>document.getElementById('g-s2-'+i).classList.add('del'));
+    if(step.p1!==undefined) document.getElementById('g-s1-'+step.p1).classList.add('ptr');
+    if(step.p2!==undefined) document.getElementById('g-s2-'+step.p2).classList.add('ptr');
+  }
+  window.__controllers['grow'] = makeStepper('grow', steps, render, 'g-stepnum');
+})();
+
+// ===================== SECTION 7: Code walkthrough =====================
+(function(){
+  const lines = [
+    {code:'int dp[1005][1005];', ex:'A global memo table. <b>dp[i][j]</b> will store the LCS length for the substrings starting at index i (in s1) and j (in s2), so we never recompute the same sub-problem twice.'},
+    {code:'', ex:''},
+    {code:'int lcs(string &s1, string &s2, int i, int j) {', ex:'The recursive function. <b>i</b> is our current pointer in s1, <b>j</b> is our current pointer in s2. It answers: "what is the LCS length of s1 from index i onward, and s2 from index j onward?"'},
+    {code:'    if (i == s1.size() || j == s2.size())', ex:'<b>Base case.</b> If we\'ve walked off the end of either string, there are no more characters left to match — this is where recursion must stop.'},
+    {code:'        return 0;', ex:'An empty remainder contributes 0 to the LCS length.'},
+    {code:'', ex:''},
+    {code:'    if (dp[i][j] != -1)', ex:'<b>Memoization check.</b> If we\'ve already solved lcs(i, j) before, don\'t redo the work — the recursion tree has repeated (i, j) pairs, and this is what turns exponential recursion into fast DP.'},
+    {code:'        return dp[i][j];', ex:'Return the cached answer instantly.'},
+    {code:'', ex:''},
+    {code:'    if (s1[i] == s2[j])', ex:'<b>Match case.</b> The characters at the current pointers are equal — this character can safely be part of the common subsequence.'},
+    {code:'        return dp[i][j] = 1 + lcs(s1, s2, i + 1, j + 1);', ex:'Count this matched character as <b>+1</b>, then move <b>both</b> pointers forward and solve the smaller problem. Store the result in dp[i][j] before returning.'},
+    {code:'', ex:''},
+    {code:'    return dp[i][j] = max(lcs(s1, s2, i + 1, j), lcs(s1, s2, i, j + 1));', ex:'<b>Mismatch case.</b> Characters differ, so one of them must eventually be dropped. Try dropping s1[i] (move i forward) OR dropping s2[j] (move j forward) — take whichever gives the longer LCS using <b>max()</b>.'},
+    {code:'}', ex:''},
+    {code:'', ex:''},
+    {code:'int minCost(string s1, string s2, int cost1, int cost2) {', ex:'The wrapper function — sets everything up and turns "LCS length" into the final answer the problem actually asks for.'},
+    {code:'    memset(dp, -1, sizeof(dp));', ex:'Reset the memo table to <b>-1</b> (meaning "not computed yet") before every fresh call.'},
+    {code:'    int lcsLen = lcs(s1, s2, 0, 0);', ex:'Kick off the recursion from the very start of both strings: i=0, j=0.'},
+    {code:'', ex:''},
+    {code:'    int deleted1 = s1.size() - lcsLen;', ex:'Whatever in s1 is <b>not</b> part of the LCS must be deleted.'},
+    {code:'    int deleted2 = s2.size() - lcsLen;', ex:'Same logic for s2.'},
+    {code:'', ex:''},
+    {code:'    return deleted1 * cost1 + deleted2 * cost2;', ex:'Multiply each string\'s deletions by its per-character cost and sum — this is the final minimum total deletion cost.'},
+    {code:'}', ex:''},
+  ];
+  const body = document.getElementById('codebody');
+  lines.forEach((l,idx)=>{
+    const row = document.createElement('div');
+    row.className='codeline';
+    row.innerHTML = '<span class="ln">'+(idx+1)+'</span>'+highlight(l.code);
+    const panel = document.createElement('div');
+    panel.className='explain-panel';
+    panel.innerHTML = l.ex ? '<div class="explain-inner">'+l.ex+'</div>' : '';
+    if(l.ex){
+      row.addEventListener('click', ()=>{
+        const isOpen = panel.classList.contains('show');
+        document.querySelectorAll('.explain-panel.show').forEach(p=>p.classList.remove('show'));
+        document.querySelectorAll('.codeline.open').forEach(c=>c.classList.remove('open'));
+        if(!isOpen){ panel.classList.add('show'); row.classList.add('open'); }
+      });
+    }
+    body.appendChild(row);
+    body.appendChild(panel);
+  });
+  function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+  function highlight(code){
+    let c = esc(code);
+    c = c.replace(/\b(int|return|if|string|max)\b/g, '<span class="tok-kw">$1</span>');
+    c = c.replace(/\b(dp|lcs|minCost|memset|size)\b(?=\()/g, '<span class="tok-fn">$1</span>');
+    return '<span>'+c+'</span>';
+  }
+})();
+
+// ===================== SECTION 9: Full dry run =====================
+(function(){
+  const s1 = "abcd", s2 = "acdb";
+  const s1row = document.getElementById('dr-s1row');
+  const s2row = document.getElementById('dr-s2row');
+  s1.split('').forEach((c,i)=>{ const b=document.createElement('div'); b.className='chbox'; b.textContent=c; b.id='dr-s1-'+i; s1row.appendChild(b); });
+  s2.split('').forEach((c,i)=>{ const b=document.createElement('div'); b.className='chbox'; b.textContent=c; b.id='dr-s2-'+i; s2row.appendChild(b); });
+
+  // build dp grid 5x5 (i:0..4 rows, j:0..4 cols) with headers
+  const dpDiv = document.getElementById('dr-dp');
+  const cellIds = {};
+  dpDiv.innerHTML='';
+  dpDiv.appendChild(mk('head',''));
+  for(let j=0;j<=4;j++) dpDiv.appendChild(mk('head', 'j='+j));
+  for(let i=0;i<=4;i++){
+    dpDiv.appendChild(mk('head','i='+i));
+    for(let j=0;j<=4;j++){
+      const id = 'dp-'+i+'-'+j;
+      const cell = mk(i===4||j===4?'base':'', i===4||j===4?'0':'');
+      cell.id = id;
+      cellIds[i+'_'+j]=id;
+      dpDiv.appendChild(cell);
+    }
+  }
+  function mk(cls,txt){ const d=document.createElement('div'); d.className='dp-cell '+cls; d.textContent=txt; return d; }
+
+  // Hardcoded, verified DFS trace of lcs(0,0) on "abcd" vs "acdb"
+  const T = [
+    {t:'call', i:0,j:0, note:'Call lcs(0,0). s1[0]=\'a\', s2[0]=\'a\'.'},
+    {t:'match', i:0,j:0, note:'\'a\' == \'a\' → MATCH. Need 1 + lcs(1,1).'},
+    {t:'call', i:1,j:1, note:'Call lcs(1,1). s1[1]=\'b\', s2[1]=\'c\'.'},
+    {t:'mismatch', i:1,j:1, note:'\'b\' != \'c\' → MISMATCH. Try lcs(2,1) first.'},
+    {t:'call', i:2,j:1, note:'Call lcs(2,1). s1[2]=\'c\', s2[1]=\'c\'.'},
+    {t:'match', i:2,j:1, note:'\'c\' == \'c\' → MATCH. Need 1 + lcs(3,2).'},
+    {t:'call', i:3,j:2, note:'Call lcs(3,2). s1[3]=\'d\', s2[2]=\'d\'.'},
+    {t:'match', i:3,j:2, note:'\'d\' == \'d\' → MATCH. Need 1 + lcs(4,3).'},
+    {t:'call', i:4,j:3, note:'Call lcs(4,3). i == s1.size() → base case.'},
+    {t:'return', i:4,j:3, val:0, note:'Base case hit. Return 0. dp[4][3] = 0.'},
+    {t:'return', i:3,j:2, val:1, note:'lcs(3,2) = 1 + 0 = 1. dp[3][2] = 1.'},
+    {t:'return', i:2,j:1, val:2, note:'lcs(2,1) = 1 + 1 = 2. dp[2][1] = 2.'},
+    {t:'call', i:1,j:2, note:'Back in lcs(1,1). Now try the other branch: lcs(1,2). s1[1]=\'b\', s2[2]=\'d\'.'},
+    {t:'mismatch', i:1,j:2, note:'\'b\' != \'d\' → MISMATCH. Try lcs(2,2) first.'},
+    {t:'call', i:2,j:2, note:'Call lcs(2,2). s1[2]=\'c\', s2[2]=\'d\'.'},
+    {t:'mismatch', i:2,j:2, note:'\'c\' != \'d\' → MISMATCH. Try lcs(3,2) — already solved!'},
+    {t:'memo', i:3,j:2, val:1, note:'MEMO HIT: dp[3][2] = 1 already cached. No recomputation needed.'},
+    {t:'call', i:2,j:3, note:'Now try the other branch of (2,2): lcs(2,3). s1[2]=\'c\', s2[3]=\'b\'.'},
+    {t:'mismatch', i:2,j:3, note:'\'c\' != \'b\' → MISMATCH. Try lcs(3,3) first.'},
+    {t:'call', i:3,j:3, note:'Call lcs(3,3). s1[3]=\'d\', s2[3]=\'b\'.'},
+    {t:'mismatch', i:3,j:3, note:'\'d\' != \'b\' → MISMATCH. Try lcs(4,3) — already solved!'},
+    {t:'memo', i:4,j:3, val:0, note:'MEMO HIT: dp[4][3] = 0 already cached.'},
+    {t:'call', i:3,j:4, note:'Try the other branch: lcs(3,4). j == s2.size() → base case.'},
+    {t:'return', i:3,j:4, val:0, note:'Base case hit. Return 0. dp[3][4] = 0.'},
+    {t:'return', i:3,j:3, val:0, note:'lcs(3,3) = max(0, 0) = 0. dp[3][3] = 0.'},
+    {t:'call', i:2,j:4, note:'Back in lcs(2,3), try other branch: lcs(2,4). j == s2.size() → base case.'},
+    {t:'return', i:2,j:4, val:0, note:'Base case hit. Return 0. dp[2][4] = 0.'},
+    {t:'return', i:2,j:3, val:0, note:'lcs(2,3) = max(0, 0) = 0. dp[2][3] = 0.'},
+    {t:'return', i:2,j:2, val:1, note:'lcs(2,2) = max(1, 0) = 1. dp[2][2] = 1.'},
+    {t:'call', i:1,j:3, note:'Back in lcs(1,2), try other branch: lcs(1,3). s1[1]=\'b\', s2[3]=\'b\'.'},
+    {t:'match', i:1,j:3, note:'\'b\' == \'b\' → MATCH. Need 1 + lcs(2,4) — already solved!'},
+    {t:'memo', i:2,j:4, val:0, note:'MEMO HIT: dp[2][4] = 0 already cached.'},
+    {t:'return', i:1,j:3, val:1, note:'lcs(1,3) = 1 + 0 = 1. dp[1][3] = 1.'},
+    {t:'return', i:1,j:2, val:1, note:'lcs(1,2) = max(1, 1) = 1. dp[1][2] = 1.'},
+    {t:'return', i:1,j:1, val:2, note:'lcs(1,1) = max(2, 1) = 2. dp[1][1] = 2.'},
+    {t:'return', i:0,j:0, val:3, note:'lcs(0,0) = 1 + 2 = 3. dp[0][0] = 3. This is the final LCS length!'},
+    {t:'final', i:0,j:0, note:'LCS length = 3 → deleted1 = 4−3 = 1 (×10 = 10), deleted2 = 4−3 = 1 (×20 = 20). Total cost = 30.'},
+  ];
+
+  const stackDiv = document.getElementById('dr-stack');
+  const rowIds = {};
+  const depthOf = {};
+  let depth = 0;
+  const depthStack = [];
+  T.forEach((step,idx)=>{
+    if(step.t==='call'){
+      const row = document.createElement('div');
+      row.className='stack-row';
+      row.id = 'stk-'+idx;
+      row.style.paddingLeft = (10+depthStack.length*16)+'px';
+      row.textContent = 'lcs('+step.i+', '+step.j+')';
+      stackDiv.appendChild(row);
+      depthStack.push(idx);
+      rowIds[step.i+'_'+step.j+'_call'] = 'stk-'+idx;
+      step._rowId = 'stk-'+idx;
+    } else if(step.t==='return'){
+      depthStack.pop();
+    }
+  });
+
+  function resetVisuals(){
+    [0,1,2,3].forEach(i=>{ document.getElementById('dr-s1-'+i).className='chbox'; document.getElementById('dr-s2-'+i).className='chbox'; });
+    document.querySelectorAll('.stack-row').forEach(r=>{ r.classList.remove('active'); });
+    document.querySelectorAll('.dp-cell').forEach(c=>c.classList.remove('hot'));
+  }
+
+  function render(step, idx){
+    resetVisuals();
+    document.getElementById('dr-caption').innerHTML = step.note;
+    document.getElementById('dr-i').textContent = step.i;
+    document.getElementById('dr-j').textContent = step.j;
+    document.getElementById('dr-c1').textContent = step.i<4? s1[step.i] : '—';
+    document.getElementById('dr-c2').textContent = step.j<4? s2[step.j] : '—';
+    if(step.i<4) document.getElementById('dr-s1-'+step.i).classList.add('ptr');
+    if(step.j<4) document.getElementById('dr-s2-'+step.j).classList.add('ptr');
+    if(step.t==='match'){ document.getElementById('dr-s1-'+step.i).classList.add('match'); document.getElementById('dr-s2-'+step.j).classList.add('match'); }
+    if(step.t==='mismatch'){ document.getElementById('dr-s1-'+step.i).classList.add('mismatch'); document.getElementById('dr-s2-'+step.j).classList.add('mismatch'); }
+
+    // mark all calls up to idx as done/active; find nearest ancestor call rows to highlight active path
+    for(let k=0;k<=idx;k++){
+      if(T[k].t==='call' && T[k]._rowId){
+        const r = document.getElementById(T[k]._rowId);
+        if(r) r.classList.add('done');
+      }
+    }
+    // highlight current frame
+    let curRowId = null;
+    if(step.t==='call') curRowId = step._rowId;
+    else {
+      for(let k=idx;k>=0;k--){ if(T[k].t==='call' && T[k].i===step.i && T[k].j===step.j){ curRowId=T[k]._rowId; break; } }
+    }
+    if(curRowId){ const r=document.getElementById(curRowId); if(r){ r.classList.add('active'); r.scrollIntoView({block:'nearest'}); if(step.val!==undefined){ r.innerHTML = 'lcs('+step.i+', '+step.j+') = <span class="rv">'+step.val+'</span>'+(step.t==='memo'?' <span class="memo-flag">[memo]</span>':''); } } }
+
+    // dp grid
+    const dc = document.getElementById('dp-'+step.i+'-'+step.j);
+    if(dc){
+      dc.classList.add('hot');
+      if(step.val!==undefined){ dc.textContent = step.val; dc.classList.add('filled'); dc.classList.remove('hot'); dc.classList.add('hot'); }
+    }
+    // also keep previously filled cells visible
+    T.slice(0, idx+1).forEach(s=>{
+      if(s.val!==undefined){
+        const c = document.getElementById('dp-'+s.i+'-'+s.j);
+        if(c && c.textContent==='') { c.textContent = s.val; c.classList.add('filled'); }
+        else if (c && !c.classList.contains('filled') && c.textContent === '') { c.textContent = s.val; c.classList.add('filled'); }
+      }
+    });
+  }
+  window.__controllers['dry'] = makeStepper('dry', T, render, 'dry-stepnum');
+})();
+
+// ===================== Scroll progress + nav dots =====================
+(function(){
+  const bar = document.getElementById('progress-bar');
+  window.addEventListener('scroll', ()=>{
+    const h = document.documentElement;
+    const pct = (h.scrollTop) / (h.scrollHeight - h.clientHeight) * 100;
+    bar.style.width = pct+'%';
+  });
+  const sections = document.querySelectorAll('section, header.hero');
+  const nav = document.getElementById('dotsNav');
+  sections.forEach((s,i)=>{
+    if(!s.id) return;
+    const a = document.createElement('a');
+    a.href = '#'+s.id;
+    nav.appendChild(a);
+  });
+  const dotEls = nav.querySelectorAll('a');
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(en=>{
+      if(en.isIntersecting){
+        const id = en.target.id;
+        dotEls.forEach(d=>d.classList.toggle('active', d.getAttribute('href')==='#'+id));
+      }
+    });
+  }, {threshold:0.4});
+  sections.forEach(s=>{ if(s.id) io.observe(s); });
+})();
+
+</script>
+</body>
+</html>
